@@ -731,26 +731,57 @@ select.form-input {
 
 .standards-table {
     margin-top: 12px;
-    font-size: 11px;
+    font-size: 13px;
+    background: var(--bg);
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .standards-row {
     display: grid;
-    grid-template-columns: 1.2fr repeat(5, 1fr);
-    gap: 4px;
-    padding: 6px 0;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 8px;
+    padding: 12px 14px;
     border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+}
+
+.standards-row:last-child {
+    border-bottom: none;
 }
 
 .standards-row.header {
-    font-size: 9px;
+    font-size: 10px;
     color: var(--text-muted);
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 14px;
+    background: var(--surface);
+    font-weight: 600;
 }
 
-.standards-cell { text-align: center; }
-.standards-cell.name { text-align: left; font-weight: 600; }
-.standards-cell.current { color: var(--accent); font-weight: 600; }
+.standards-row.current {
+    background: rgba(255, 59, 48, 0.1);
+    border-left: 3px solid var(--accent);
+}
+
+.standards-cell {
+    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.standards-cell.name {
+    text-align: left;
+    font-weight: 600;
+    justify-content: flex-start;
+}
+
+.standards-row.current .standards-cell {
+    color: var(--accent);
+}
+
 .standards-cell .working { font-size: 9px; opacity: 0.6; }
 
 /* Progress Planner */
