@@ -52,6 +52,10 @@ export function loadProgressExercise(exerciseId) {
     // Update strength level
     updateProgressLevel(exercise);
 
+    // Render standards table and goal suggestions
+    renderStandardsTable(exercise);
+    renderGoalSuggestions(exercise);
+
     // Populate plan fields with current data
     document.getElementById('progress-plan-current').value = exercise.workingWeight || '';
     document.getElementById('progress-plan-increment').value = exercise.weightIncrement || 5;
@@ -208,4 +212,120 @@ export function cancelProgressPlan() {
         document.getElementById('progress-active-plan').style.display = 'none';
         showToast('Plan cancelled');
     }
+}
+
+// Render standards table
+export function renderStandardsTable(exercise) {
+    const profile = getObj(KEYS.profile);
+    const bodyWeight = profile.bodyWeight || profile.weight || 180;
+    const sex = profile.sex || 'male';
+
+    const section = document.getElementById('progress-standards-section');
+    const container = document.getElementById('progress-standards-table');
+
+    if (!exercise.hasStandards || !STANDARDS[sex][exercise.id]) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+    const standards = STANDARDS[sex][exercise.id];
+    const current1RM = exercise.estimated1RM || 0;
+
+    let html = '<div class="standards-table">';
+    html += '<div class="standards-row header">';
+    html += '<div class="standards-cell name">Level</div>';
+    html += '<div class="standards-cell">1RM</div>';
+    html += '<div class="standards-cell">Working (70%)</div>';
+    html += '</div>';
+
+    LEVELS.forEach((level, i) => {
+        const rm = Math.round(standards[i] * bodyWeight);
+        const working = Math.round(rm * 0.7);
+        const isCurrent = current1RM >= rm && (i === LEVELS.length - 1 || current1RM < Math.round(standards[i + 1] * bodyWeight));
+
+        html += `<div class="standards-row">`;
+        html += `<div class="standards-cell name ${isCurrent ? 'current' : ''}">${level}</div>`;
+        html += `<div class="standards-cell ${isCurrent ? 'current' : ''}">${rm}</div>`;
+        html += `<div class="standards-cell ${isCurrent ? 'current' : ''}">${working}</div>`;
+        html += `</div>`;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Render goal suggestions
+export function renderGoalSuggestions(exercise) {
+    const profile = getObj(KEYS.profile);
+    const bodyWeight = profile.bodyWeight || profile.weight || 180;
+    const sex = profile.sex || 'male';
+
+    const section = document.getElementById('progress-goal-suggestions');
+    const container = document.getElementById('progress-goal-chips');
+
+    if (!exercise.hasStandards || !exercise.estimated1RM || !STANDARDS[sex][exercise.id]) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+    const standards = STANDARDS[sex][exercise.id];
+    const current1RM = exercise.estimated1RM;
+    const currentWorking = exercise.workingWeight || Math.round(current1RM * 0.7);
+
+    const goals = [];
+
+    // Next weight increment (small goal)
+    const increment = exercise.weightIncrement || 5;
+    goals.push({
+        weight: currentWorking + increment,
+        label: `+${increment} lbs`,
+        type: 'next'
+    });
+
+    // Round number milestones
+    const milestones = [100, 135, 185, 225, 275, 315, 365, 405, 495];
+    milestones.forEach(m => {
+        if (m > currentWorking && m <= currentWorking + 100) {
+            goals.push({
+                weight: m,
+                label: `${m} lbs plate`,
+                type: 'milestone'
+            });
+        }
+    });
+
+    // Next strength level
+    LEVELS.forEach((level, i) => {
+        const levelRM = Math.round(standards[i] * bodyWeight);
+        const levelWorking = Math.round(levelRM * 0.7);
+        if (levelWorking > currentWorking && levelWorking <= currentWorking + 100) {
+            goals.push({
+                weight: levelWorking,
+                label: level,
+                type: 'level'
+            });
+        }
+    });
+
+    // Remove duplicates and sort
+    const uniqueGoals = goals.filter((g, i, arr) =>
+        arr.findIndex(x => x.weight === g.weight) === i
+    ).sort((a, b) => a.weight - b.weight).slice(0, 6);
+
+    let html = uniqueGoals.map(g => `
+        <button type="button" class="goal-chip ${g.type}" onclick="window.selectGoal(${g.weight})">
+            ${g.weight} lbs
+            <span class="chip-label">${g.label}</span>
+        </button>
+    `).join('');
+
+    container.innerHTML = html;
+}
+
+// Select goal (called from goal chip)
+export function selectGoal(weight) {
+    document.getElementById('progress-plan-goal').value = weight;
+    showToast('Goal set to ' + weight + ' lbs');
 }

@@ -2,7 +2,7 @@
 import { initExerciseLibrary, migrateToV4 } from './storage.js';
 import { renderTemplates, openTemplateModal, renderExercisePicker, createCustomExercise, saveTemplate, deleteTemplate, templateExercises } from './templates.js';
 import { startWorkout, finishWorkout, cancelWorkout, updateSet, toggleSet, addSet, adjustWeight, updateCardioField, adjustCardioField, toggleCardioComplete, confirmYes, confirmNo } from './workout.js';
-import { populateProgressExercises, loadProgressExercise, updateProgress, generateProgressPlan, cancelProgressPlan } from './progress.js';
+import { populateProgressExercises, loadProgressExercise, updateProgress, generateProgressPlan, cancelProgressPlan, selectGoal } from './progress.js';
 import { renderHistory, viewWorkout } from './history.js';
 import { loadProfile, saveProfile, exportData, importData, clearAllData } from './settings.js';
 
@@ -20,6 +20,7 @@ window.adjustCardioField = adjustCardioField;
 window.toggleCardioComplete = toggleCardioComplete;
 window.viewWorkout = viewWorkout;
 window.renderHistory = renderHistory;
+window.selectGoal = selectGoal;
 
 // App initialization
 document.addEventListener('DOMContentLoaded', function() {
