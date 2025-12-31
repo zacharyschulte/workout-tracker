@@ -1443,40 +1443,115 @@
     <script>
         // Storage keys
         const KEYS = {
-            templates: 'iron_templates',
-            history: 'iron_history',
-            profile: 'iron_profile',
-            estimates: 'iron_estimates',
-            plans: 'iron_plans'
+            templates: 'iron_templates_v4',
+            history: 'iron_history_v4',
+            profile: 'iron_profile_v4',
+            exercises: 'iron_exercises_v4',
+            plans: 'iron_plans_v4'
         };
 
-        // Exercise data
-        const EXERCISES = {
-            'bench': 'Bench Press',
-            'squat': 'Back Squat',
-            'deadlift': 'Deadlift',
-            'ohp': 'Overhead Press',
-            'row': 'Barbell Row',
-            'front-squat': 'Front Squat'
+        // IRON v4 - Comprehensive Exercise Library
+        const EXERCISE_LIBRARY = {
+            // Strength - Barbell
+            'bench-press': { id: 'bench-press', name: 'Bench Press', category: 'strength', equipment: 'barbell', muscleGroup: 'chest', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 5 },
+            'incline-bench': { id: 'incline-bench', name: 'Incline Bench Press', category: 'strength', equipment: 'barbell', muscleGroup: 'chest', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 5 },
+            'back-squat': { id: 'back-squat', name: 'Back Squat', category: 'strength', equipment: 'barbell', muscleGroup: 'legs', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 10 },
+            'front-squat': { id: 'front-squat', name: 'Front Squat', category: 'strength', equipment: 'barbell', muscleGroup: 'legs', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 5 },
+            'deadlift': { id: 'deadlift', name: 'Deadlift', category: 'strength', equipment: 'barbell', muscleGroup: 'back', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 10 },
+            'romanian-deadlift': { id: 'romanian-deadlift', name: 'Romanian Deadlift', category: 'strength', equipment: 'barbell', muscleGroup: 'legs', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 10 },
+            'overhead-press': { id: 'overhead-press', name: 'Overhead Press', category: 'strength', equipment: 'barbell', muscleGroup: 'shoulders', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 2.5 },
+            'barbell-row': { id: 'barbell-row', name: 'Barbell Row', category: 'strength', equipment: 'barbell', muscleGroup: 'back', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 5 },
+            'barbell-curl': { id: 'barbell-curl', name: 'Barbell Curl', category: 'strength', equipment: 'barbell', muscleGroup: 'arms', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 2.5 },
+
+            // Strength - Dumbbell
+            'db-bench': { id: 'db-bench', name: 'Dumbbell Bench Press', category: 'strength', equipment: 'dumbbell', muscleGroup: 'chest', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 5 },
+            'db-row': { id: 'db-row', name: 'Dumbbell Row', category: 'strength', equipment: 'dumbbell', muscleGroup: 'back', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 5 },
+            'lateral-raise': { id: 'lateral-raise', name: 'Lateral Raises', category: 'strength', equipment: 'dumbbell', muscleGroup: 'shoulders', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 2.5 },
+            'db-curl': { id: 'db-curl', name: 'Dumbbell Curls', category: 'strength', equipment: 'dumbbell', muscleGroup: 'arms', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 2.5 },
+            'tricep-extension': { id: 'tricep-extension', name: 'Tricep Extensions', category: 'strength', equipment: 'dumbbell', muscleGroup: 'arms', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 2.5 },
+            'db-lunge': { id: 'db-lunge', name: 'Dumbbell Lunges', category: 'strength', equipment: 'dumbbell', muscleGroup: 'legs', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 5 },
+            'goblet-squat': { id: 'goblet-squat', name: 'Goblet Squat', category: 'strength', equipment: 'dumbbell', muscleGroup: 'legs', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 5 },
+            'db-shoulder-press': { id: 'db-shoulder-press', name: 'Dumbbell Shoulder Press', category: 'strength', equipment: 'dumbbell', muscleGroup: 'shoulders', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 2.5 },
+            'db-chest-fly': { id: 'db-chest-fly', name: 'Dumbbell Chest Fly', category: 'strength', equipment: 'dumbbell', muscleGroup: 'chest', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 2.5 },
+
+            // Strength - Kettlebell
+            'kb-swing': { id: 'kb-swing', name: 'Kettlebell Swing', category: 'strength', equipment: 'kettlebell', muscleGroup: 'fullbody', hasStandards: false, trackingType: 'weight-reps', weightIncrement: 5 },
+            'kb-goblet-squat': { id: 'kb-goblet-squat', name: 'Kettlebell Goblet Squat', category: 'strength', equipment: 'kettlebell', muscleGroup: 'legs', hasStandards: false, trackingType: 'weight-reps', weightIncrement: 5 },
+            'turkish-getup': { id: 'turkish-getup', name: 'Turkish Get-up', category: 'strength', equipment: 'kettlebell', muscleGroup: 'fullbody', hasStandards: false, trackingType: 'weight-reps', weightIncrement: 5 },
+            'farmers-walk': { id: 'farmers-walk', name: 'Farmers Walk', category: 'strength', equipment: 'kettlebell', muscleGroup: 'fullbody', hasStandards: false, trackingType: 'weight-time', weightIncrement: 5 },
+            'kb-clean-press': { id: 'kb-clean-press', name: 'Kettlebell Clean & Press', category: 'strength', equipment: 'kettlebell', muscleGroup: 'fullbody', hasStandards: false, trackingType: 'weight-reps', weightIncrement: 5 },
+
+            // Strength - Cable/Machine
+            'lat-pulldown': { id: 'lat-pulldown', name: 'Lat Pulldown', category: 'strength', equipment: 'cable', muscleGroup: 'back', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 5 },
+            'cable-row': { id: 'cable-row', name: 'Cable Row', category: 'strength', equipment: 'cable', muscleGroup: 'back', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 5 },
+            'leg-press': { id: 'leg-press', name: 'Leg Press', category: 'strength', equipment: 'machine', muscleGroup: 'legs', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 10 },
+            'leg-curl': { id: 'leg-curl', name: 'Leg Curl', category: 'strength', equipment: 'machine', muscleGroup: 'legs', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 5 },
+            'leg-extension': { id: 'leg-extension', name: 'Leg Extension', category: 'strength', equipment: 'machine', muscleGroup: 'legs', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 5 },
+            'cable-fly': { id: 'cable-fly', name: 'Cable Fly', category: 'strength', equipment: 'cable', muscleGroup: 'chest', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 2.5 },
+            'tricep-pushdown': { id: 'tricep-pushdown', name: 'Tricep Pushdown', category: 'strength', equipment: 'cable', muscleGroup: 'arms', hasStandards: true, trackingType: 'weight-reps', weightIncrement: 2.5 },
+
+            // Strength - Bodyweight
+            'pullup': { id: 'pullup', name: 'Pull-ups', category: 'strength', equipment: 'bodyweight', muscleGroup: 'back', hasStandards: false, trackingType: 'weight-reps', weightIncrement: 5 },
+            'pushup': { id: 'pushup', name: 'Push-ups', category: 'strength', equipment: 'bodyweight', muscleGroup: 'chest', hasStandards: false, trackingType: 'weight-reps', weightIncrement: 0 },
+            'dip': { id: 'dip', name: 'Dips', category: 'strength', equipment: 'bodyweight', muscleGroup: 'chest', hasStandards: false, trackingType: 'weight-reps', weightIncrement: 5 },
+            'plank': { id: 'plank', name: 'Plank', category: 'strength', equipment: 'bodyweight', muscleGroup: 'core', hasStandards: false, trackingType: 'weight-time', weightIncrement: 0 },
+
+            // Cardio
+            'treadmill': { id: 'treadmill', name: 'Treadmill', category: 'cardio', equipment: 'machine', muscleGroup: 'fullbody', hasStandards: false, trackingType: 'cardio', cardioFields: ['time', 'speed', 'incline'] },
+            'elliptical': { id: 'elliptical', name: 'Elliptical', category: 'cardio', equipment: 'machine', muscleGroup: 'fullbody', hasStandards: false, trackingType: 'cardio', cardioFields: ['time', 'resistance'] },
+            'stationary-bike': { id: 'stationary-bike', name: 'Stationary Bike', category: 'cardio', equipment: 'machine', muscleGroup: 'fullbody', hasStandards: false, trackingType: 'cardio', cardioFields: ['time', 'resistance'] },
+            'rowing-machine': { id: 'rowing-machine', name: 'Rowing Machine', category: 'cardio', equipment: 'machine', muscleGroup: 'fullbody', hasStandards: false, trackingType: 'cardio', cardioFields: ['time', 'distance'] },
+            'stair-climber': { id: 'stair-climber', name: 'Stair Climber', category: 'cardio', equipment: 'machine', muscleGroup: 'fullbody', hasStandards: false, trackingType: 'cardio', cardioFields: ['time', 'resistance'] },
+            'jump-rope': { id: 'jump-rope', name: 'Jump Rope', category: 'cardio', equipment: 'bodyweight', muscleGroup: 'fullbody', hasStandards: false, trackingType: 'cardio', cardioFields: ['time'] }
         };
 
         // Strength standards (multipliers of bodyweight)
         const STANDARDS = {
             male: {
-                'bench': [0.5, 0.75, 1.0, 1.5, 2.0],
-                'squat': [0.75, 1.0, 1.5, 2.0, 2.75],
-                'deadlift': [1.0, 1.25, 1.75, 2.5, 3.25],
-                'ohp': [0.35, 0.5, 0.65, 0.85, 1.15],
-                'row': [0.5, 0.65, 0.85, 1.15, 1.5],
-                'front-squat': [0.6, 0.8, 1.15, 1.6, 2.1]
+                'bench-press': [0.50, 0.75, 1.00, 1.50, 2.00],
+                'incline-bench': [0.50, 0.75, 1.00, 1.50, 2.00],
+                'back-squat': [0.75, 1.00, 1.50, 2.00, 2.75],
+                'front-squat': [0.60, 0.85, 1.15, 1.50, 1.90],
+                'deadlift': [1.00, 1.25, 1.75, 2.25, 3.00],
+                'overhead-press': [0.35, 0.50, 0.75, 1.00, 1.25],
+                'barbell-row': [0.40, 0.55, 0.75, 1.00, 1.25],
+                'romanian-deadlift': [0.75, 1.00, 1.35, 1.75, 2.25],
+                'barbell-curl': [0.30, 0.40, 0.55, 0.70, 0.90],
+                'db-bench': [0.20, 0.30, 0.40, 0.60, 0.80],
+                'db-row': [0.20, 0.30, 0.40, 0.55, 0.70],
+                'db-shoulder-press': [0.15, 0.20, 0.30, 0.40, 0.50],
+                'lateral-raise': [0.05, 0.08, 0.12, 0.17, 0.22],
+                'db-curl': [0.08, 0.12, 0.17, 0.23, 0.30],
+                'lat-pulldown': [0.50, 0.70, 0.90, 1.20, 1.50],
+                'cable-row': [0.50, 0.70, 0.90, 1.20, 1.50],
+                'leg-press': [1.50, 2.00, 2.75, 3.50, 4.50],
+                'leg-curl': [0.25, 0.35, 0.50, 0.65, 0.85],
+                'leg-extension': [0.30, 0.40, 0.55, 0.75, 1.00],
+                'cable-fly': [0.15, 0.20, 0.30, 0.40, 0.55],
+                'tricep-pushdown': [0.20, 0.30, 0.45, 0.60, 0.80]
             },
             female: {
-                'bench': [0.25, 0.4, 0.6, 0.85, 1.15],
-                'squat': [0.5, 0.75, 1.0, 1.5, 2.0],
-                'deadlift': [0.65, 1.0, 1.25, 1.75, 2.25],
-                'ohp': [0.2, 0.3, 0.45, 0.6, 0.8],
-                'row': [0.35, 0.45, 0.6, 0.8, 1.05],
-                'front-squat': [0.4, 0.6, 0.85, 1.2, 1.55]
+                'bench-press': [0.25, 0.40, 0.60, 0.85, 1.15],
+                'incline-bench': [0.25, 0.40, 0.60, 0.85, 1.15],
+                'back-squat': [0.50, 0.75, 1.00, 1.35, 1.75],
+                'front-squat': [0.40, 0.55, 0.75, 1.00, 1.30],
+                'deadlift': [0.65, 0.90, 1.25, 1.65, 2.10],
+                'overhead-press': [0.20, 0.30, 0.45, 0.60, 0.80],
+                'barbell-row': [0.25, 0.40, 0.55, 0.70, 0.90],
+                'romanian-deadlift': [0.50, 0.70, 0.95, 1.25, 1.60],
+                'barbell-curl': [0.20, 0.25, 0.35, 0.45, 0.60],
+                'db-bench': [0.10, 0.15, 0.25, 0.35, 0.45],
+                'db-row': [0.10, 0.18, 0.25, 0.35, 0.45],
+                'db-shoulder-press': [0.08, 0.12, 0.18, 0.25, 0.32],
+                'lateral-raise': [0.03, 0.05, 0.08, 0.11, 0.15],
+                'db-curl': [0.05, 0.08, 0.11, 0.15, 0.20],
+                'lat-pulldown': [0.35, 0.50, 0.65, 0.85, 1.10],
+                'cable-row': [0.35, 0.50, 0.65, 0.85, 1.10],
+                'leg-press': [1.00, 1.50, 2.00, 2.75, 3.50],
+                'leg-curl': [0.15, 0.25, 0.35, 0.50, 0.65],
+                'leg-extension': [0.20, 0.30, 0.40, 0.55, 0.75],
+                'cable-fly': [0.08, 0.12, 0.18, 0.25, 0.35],
+                'tricep-pushdown': [0.12, 0.18, 0.28, 0.40, 0.55]
             }
         };
 
@@ -1500,6 +1575,154 @@
             t.textContent = msg;
             t.className = 'toast show ' + type;
             setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        // Initialize exercise library with user data
+        function initExerciseLibrary() {
+            let exercises = getObj(KEYS.exercises);
+
+            // If empty or missing exercises, initialize from library
+            if (Object.keys(exercises).length === 0) {
+                exercises = {};
+                Object.entries(EXERCISE_LIBRARY).forEach(([id, exercise]) => {
+                    exercises[id] = {
+                        ...exercise,
+                        isCustom: false,
+                        isFavorite: false,
+                        workingWeight: null,
+                        estimated1RM: null,
+                        pr: {},
+                        lastPerformed: null,
+                        trend: 'stable'
+                    };
+                });
+                set(KEYS.exercises, exercises);
+            } else {
+                // Add any new predefined exercises
+                Object.entries(EXERCISE_LIBRARY).forEach(([id, exercise]) => {
+                    if (!exercises[id]) {
+                        exercises[id] = {
+                            ...exercise,
+                            isCustom: false,
+                            isFavorite: false,
+                            workingWeight: null,
+                            estimated1RM: null,
+                            pr: {},
+                            lastPerformed: null,
+                            trend: 'stable'
+                        };
+                    }
+                });
+                set(KEYS.exercises, exercises);
+            }
+
+            return exercises;
+        }
+
+        // Get exercise by ID
+        function getExercise(exerciseId) {
+            const exercises = getObj(KEYS.exercises);
+            return exercises[exerciseId] || null;
+        }
+
+        // Update exercise data
+        function updateExercise(exerciseId, updates) {
+            const exercises = getObj(KEYS.exercises);
+            if (exercises[exerciseId]) {
+                exercises[exerciseId] = { ...exercises[exerciseId], ...updates };
+                set(KEYS.exercises, exercises);
+            }
+        }
+
+        // Migration from v3 to v4
+        function migrateToV4() {
+            // Check if already migrated
+            if (localStorage.getItem(KEYS.exercises)) {
+                return; // Already on v4
+            }
+
+            const oldTemplates = localStorage.getItem('iron_templates');
+            const oldHistory = localStorage.getItem('iron_history');
+            const oldProfile = localStorage.getItem('iron_profile');
+            const oldEstimates = localStorage.getItem('iron_estimates');
+            const oldPlans = localStorage.getItem('iron_plans');
+
+            if (!oldTemplates && !oldHistory) {
+                return; // Fresh install, no migration needed
+            }
+
+            console.log('Migrating to IRON v4...');
+
+            // Migration mapping for old exercise IDs
+            const exerciseIdMap = {
+                'bench': 'bench-press',
+                'squat': 'back-squat',
+                'deadlift': 'deadlift',
+                'ohp': 'overhead-press',
+                'row': 'barbell-row',
+                'front-squat': 'front-squat'
+            };
+
+            // Migrate templates
+            if (oldTemplates) {
+                try {
+                    const templates = JSON.parse(oldTemplates);
+                    const newTemplates = templates.map(t => ({
+                        ...t,
+                        exercises: t.exercises.map(e => ({
+                            exerciseId: exerciseIdMap[e.id] || e.id,
+                            isWarmup: false,
+                            targetSets: e.sets,
+                            targetReps: e.reps,
+                            targetWeight: e.weight
+                        }))
+                    }));
+                    set(KEYS.templates, newTemplates);
+                } catch (err) {
+                    console.error('Template migration error:', err);
+                }
+            }
+
+            // Migrate history
+            if (oldHistory) {
+                try {
+                    const history = JSON.parse(oldHistory);
+                    const newHistory = history.map(w => ({
+                        ...w,
+                        exercises: w.exercises.map(e => {
+                            const newId = exerciseIdMap[e.id] || e.id;
+                            const exercise = EXERCISE_LIBRARY[newId];
+
+                            if (exercise && exercise.category === 'cardio') {
+                                return {
+                                    exerciseId: newId,
+                                    isWarmup: false,
+                                    type: 'cardio',
+                                    time: e.sets ? e.sets[0]?.reps : 10,
+                                    resistance: 8
+                                };
+                            }
+
+                            return {
+                                exerciseId: newId,
+                                isWarmup: false,
+                                type: 'strength',
+                                sets: e.sets || []
+                            };
+                        })
+                    }));
+                    set(KEYS.history, newHistory);
+                } catch (err) {
+                    console.error('History migration error:', err);
+                }
+            }
+
+            // Copy profile and plans as-is
+            if (oldProfile) localStorage.setItem(KEYS.profile, oldProfile);
+            if (oldPlans) localStorage.setItem(KEYS.plans, oldPlans);
+
+            console.log('Migration complete!');
+            showToast('Upgraded to IRON v4!', 'success');
         }
 
         // Tab navigation
@@ -2257,12 +2480,14 @@
         // Close modals on overlay click
         document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); }));
 
-        // Init
+        // Init - IRON v4
+        migrateToV4();  // Migrate old data if present
+        initExerciseLibrary();  // Initialize exercise library
         renderTemplates();
         renderHistory();
         loadProfile();
         renderSavedPlans();
-        loadExerciseData();
+        if (typeof loadExerciseData === 'function') loadExerciseData();
 
         // Register service worker for offline support
         if ('serviceWorker' in navigator) {
