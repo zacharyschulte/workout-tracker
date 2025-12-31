@@ -1411,12 +1411,48 @@
             <!-- Tab: Settings -->
             <div class="tab-content" id="tab-settings">
                 <h2 class="section-title">Settings</h2>
+
+                <!-- Profile Settings -->
+                <div class="card">
+                    <div class="card-title">Profile</div>
+                    <div class="form-row" style="margin-top: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Body Weight (lbs)</label>
+                            <input type="number" inputmode="decimal" class="form-input" id="profile-weight" placeholder="180" min="50" max="500" step="0.1">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Sex</label>
+                            <select class="form-input" id="profile-sex">
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="save-profile-btn" style="margin-top: 12px; width: 100%;">Save Profile</button>
+                </div>
+
+                <!-- Data Management -->
                 <div class="card">
                     <div class="card-title">Data Management</div>
-                    <button type="button" class="btn btn-secondary" id="export-btn" style="margin-top: 10px;">Export All Data</button>
-                    <button type="button" class="btn btn-secondary" id="import-btn" style="margin-top: 8px;">Import Data</button>
-                    <button type="button" class="btn btn-danger" id="clear-btn" style="margin-top: 8px;">Clear All Data</button>
+                    <button type="button" class="btn btn-secondary" id="export-btn" style="margin-top: 10px; width: 100%;">Export All Data</button>
+                    <button type="button" class="btn btn-secondary" id="import-btn" style="margin-top: 8px; width: 100%;">Import Data</button>
+                    <button type="button" class="btn btn-danger" id="clear-btn" style="margin-top: 8px; width: 100%;">Clear All Data</button>
                 </div>
+
+                <!-- About -->
+                <div class="card">
+                    <div class="card-title">About</div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.6;">
+                        <strong style="color: var(--text);">IRON v4.0</strong><br>
+                        Lightweight workout tracker with smart features.<br>
+                        <br>
+                        • 40+ exercises<br>
+                        • PR detection<br>
+                        • Progress tracking<br>
+                        • Offline support
+                    </div>
+                </div>
+
                 <input type="file" id="import-input" accept=".json" style="display: none;">
             </div>
         </main>
@@ -2860,21 +2896,88 @@
             }
 
             list.innerHTML = history.map(w => {
-                const date = new Date(w.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-                const summary = w.exercises.map(e => `${e.name}: ${e.sets.filter(s => s.completed).length} sets`).join(', ');
-                return `<div class="history-card" onclick="viewWorkout('${w.id}')"><div class="history-header"><span class="history-name">${esc(w.templateName)}</span><span class="history-date">${date}</span></div><div class="history-summary">${summary}</div></div>`;
+                const date = new Date(w.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                const duration = w.duration ? Math.round(w.duration / 60000) + ' min' : '';
+                const hasPRs = w.prsAchieved && w.prsAchieved.length > 0;
+
+                // Format exercise summary for v4
+                const summary = w.exercises.map(e => {
+                    const exercise = getExercise(e.exerciseId);
+                    if (!exercise) return '';
+
+                    if (e.type === 'cardio') {
+                        return `${e.isWarmup ? '☀ ' : ''}${exercise.name}: ${e.actualTime || e.time}min`;
+                    } else {
+                        const completed = e.sets ? e.sets.filter(s => s.completed) : [];
+                        if (completed.length === 0) return '';
+                        const topSet = completed.reduce((max, s) => (parseFloat(s.weight) || 0) > (parseFloat(max.weight) || 0) ? s : max, completed[0]);
+                        return `${e.isWarmup ? '☀ ' : ''}${exercise.name}: ${topSet.weight}×${topSet.reps}`;
+                    }
+                }).filter(s => s).join(' • ');
+
+                return `
+                    <div class="history-card" onclick="viewWorkout('${w.id}')">
+                        <div class="history-header">
+                            <span class="history-name">${esc(w.templateName)} ${hasPRs ? '🏆' : ''}</span>
+                            <span class="history-date">${date}</span>
+                        </div>
+                        <div class="history-summary">${summary || 'No exercises completed'}</div>
+                        ${duration ? `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">${duration}</div>` : ''}
+                    </div>`;
             }).join('');
         }
 
         window.viewWorkout = id => {
             const w = get(KEYS.history).find(x => x.id === id);
             if (!w) return;
-            document.getElementById('workout-modal-title').textContent = w.templateName;
-            document.getElementById('workout-modal-date').textContent = new Date(w.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-            document.getElementById('workout-modal-exercises').innerHTML = w.exercises.map(e => `
-                <div class="card" style="margin-bottom: 10px;"><div class="card-title">${esc(e.name)}</div>
-                <div class="card-subtitle">${e.sets.filter(s => s.completed).map((s, i) => `Set ${i + 1}: ${s.weight} × ${s.reps}`).join('<br>') || 'No sets completed'}</div></div>
-            `).join('');
+
+            const date = new Date(w.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+            const hasPRs = w.prsAchieved && w.prsAchieved.length > 0;
+
+            document.getElementById('workout-modal-title').textContent = w.templateName + (hasPRs ? ' 🏆' : '');
+            document.getElementById('workout-modal-date').textContent = date;
+
+            let html = '';
+
+            // Show PRs if any
+            if (hasPRs) {
+                html += `<div style="padding: 12px; background: var(--bg); border-radius: 8px; margin-bottom: 12px; border-left: 3px solid var(--accent);">
+                    <strong style="color: var(--accent);">🏆 Personal Records</strong>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">${w.prsAchieved.join('<br>')}</div>
+                </div>`;
+            }
+
+            // Show exercises
+            html += w.exercises.map(e => {
+                const exercise = getExercise(e.exerciseId);
+                if (!exercise) return '';
+
+                const warmupLabel = e.isWarmup ? ' (warmup)' : '';
+
+                if (e.type === 'cardio') {
+                    return `<div class="card" style="margin-bottom: 10px;">
+                        <div class="card-title">${e.isWarmup ? '☀ ' : ''}${esc(exercise.name)}${warmupLabel}</div>
+                        <div class="card-subtitle">${e.actualTime || e.time} min @ Resistance ${e.actualResistance || e.resistance || 'N/A'}</div>
+                    </div>`;
+                } else {
+                    const completed = e.sets ? e.sets.filter(s => s.completed) : [];
+                    return `<div class="card" style="margin-bottom: 10px;">
+                        <div class="card-title">${e.isWarmup ? '☀ ' : ''}${esc(exercise.name)}${warmupLabel}</div>
+                        <div class="card-subtitle">${completed.map((s, i) => `Set ${i + 1}: ${s.weight} × ${s.reps}`).join('<br>') || 'No sets completed'}</div>
+                    </div>`;
+                }
+            }).join('');
+
+            // Show notes if any
+            if (w.notes && w.notes.trim()) {
+                html += `<div style="padding: 12px; background: var(--bg); border-radius: 8px; margin-top: 12px;">
+                    <strong style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Notes</strong>
+                    <div style="font-size: 13px; color: var(--text); margin-top: 6px; line-height: 1.5;">${esc(w.notes)}</div>
+                </div>`;
+            }
+
+            document.getElementById('workout-modal-exercises').innerHTML = html;
+
             document.getElementById('delete-workout-btn').onclick = () => {
                 showConfirm('Delete this workout?', function() {
                     set(KEYS.history, get(KEYS.history).filter(x => x.id !== id));
@@ -2893,19 +2996,22 @@
 
         function loadProfile() {
             const p = getProfile();
-            if (p.weight) document.getElementById('profile-weight').value = p.weight;
+            const bodyWeight = p.bodyWeight || p.weight; // v4 + backward compat
+            if (bodyWeight) document.getElementById('profile-weight').value = bodyWeight;
             if (p.sex) document.getElementById('profile-sex').value = p.sex;
-            updateStandardsTable();
+            if (typeof updateStandardsTable === 'function') updateStandardsTable();
         }
 
         document.getElementById('save-profile-btn').addEventListener('click', () => {
-            const weight = parseFloat(document.getElementById('profile-weight').value);
+            const bodyWeight = parseFloat(document.getElementById('profile-weight').value);
             const sex = document.getElementById('profile-sex').value;
-            if (!weight) { showToast('Enter your body weight'); return; }
-            set(KEYS.profile, { weight, sex });
+            if (!bodyWeight) { showToast('Enter your body weight'); return; }
+            set(KEYS.profile, { bodyWeight, sex, weight: bodyWeight }); // v4 format + backward compat
             showToast('Profile saved!', 'success');
-            updateStandardsTable();
-            calculate1RM();
+            if (typeof updateStandardsTable === 'function') updateStandardsTable();
+            if (typeof calculate1RM === 'function') calculate1RM();
+            // Refresh Progress tab if exercise selected
+            if (currentProgressExercise) loadProgressExercise(currentProgressExercise.id);
         });
 
         function calculate1RM() {
