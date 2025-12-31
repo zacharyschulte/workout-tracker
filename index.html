@@ -1207,93 +1207,110 @@
                 </div>
             </div>
 
-            <!-- Tab: 1RM Calculator -->
+            <!-- Tab: Progress (v4 Combined) -->
             <div class="tab-content" id="tab-calc">
-                <div class="calc-section">
-                    <h3 class="calc-title">Your Profile</h3>
-                    <div class="form-row">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label">Body Weight</label>
-                            <input type="number" inputmode="decimal" class="form-input" id="profile-weight" placeholder="180" min="50" max="500" step="0.1">
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label">Sex</label>
-                            <select class="form-input" id="profile-sex">
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-secondary" id="save-profile-btn" style="margin-top: 12px;">Save Profile</button>
+                <h2 class="section-title">Progress</h2>
+
+                <!-- Exercise Selector -->
+                <div class="form-group">
+                    <label class="form-label">Exercise</label>
+                    <select class="form-input" id="progress-exercise-select">
+                        <!-- Populated by JS -->
+                    </select>
                 </div>
 
-                <div class="calc-section">
-                    <h3 class="calc-title">Calculate 1RM</h3>
-                    <div class="form-group">
-                        <label class="form-label">Exercise</label>
-                        <select class="form-input" id="calc-exercise">
-                            <option value="bench">Bench Press</option>
-                            <option value="squat">Back Squat</option>
-                            <option value="deadlift">Deadlift</option>
-                            <option value="ohp">Overhead Press</option>
-                            <option value="row">Barbell Row</option>
-                            <option value="front-squat">Front Squat</option>
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label">Weight (lbs)</label>
-                            <input type="number" inputmode="decimal" class="form-input" id="calc-weight" placeholder="185" min="0" max="1500" step="0.5">
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label">Reps</label>
-                            <input type="number" inputmode="numeric" class="form-input" id="calc-reps" placeholder="5" min="1" max="100" step="1">
-                        </div>
-                    </div>
-
-                    <div class="calc-results">
-                        <div class="calc-result highlight">
-                            <div class="calc-result-value" id="calc-1rm">—</div>
+                <!-- Your Stats -->
+                <div class="calc-section" id="progress-stats-section">
+                    <h3 class="calc-title">Your Stats</h3>
+                    <div class="calc-results" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="calc-result">
+                            <div class="calc-result-value" id="progress-1rm">—</div>
                             <div class="calc-result-label">Est. 1RM</div>
                         </div>
-                        <div class="calc-result" id="current-pct-box">
-                            <div class="calc-result-value" id="calc-current-pct">—</div>
-                            <div class="calc-result-label">Your Current %</div>
+                        <div class="calc-result">
+                            <div class="calc-result-value" id="progress-working">—</div>
+                            <div class="calc-result-label">Working</div>
+                        </div>
+                        <div class="calc-result">
+                            <div class="calc-result-value" id="progress-trend">→</div>
+                            <div class="calc-result-label">Trend</div>
                         </div>
                     </div>
 
-                    <div id="current-weight-info" style="display: none; background: var(--bg); border-radius: 8px; padding: 12px; margin-top: 12px; font-size: 12px; line-height: 1.6;">
-                        <div style="color: var(--text-muted);">You're lifting <strong style="color: var(--text);" id="info-weight">135</strong> lbs at <strong style="color: var(--accent);" id="info-pct">79%</strong> of your max</div>
-                        <div style="color: var(--text-muted); margin-top: 6px; font-size: 11px;">
-                            <span style="color: var(--success);">●</span> Good for <span id="info-rep-range">6-8 reps</span> (strength-hypertrophy)
-                        </div>
-                    </div>
-
-                    <div id="standards-display" style="display: none;">
-                        <div class="form-label" style="margin-top: 14px;">Your Level</div>
+                    <!-- Strength Level -->
+                    <div id="progress-level-display" style="margin-top: 16px;">
+                        <div class="form-label" style="margin-bottom: 8px;">Level</div>
                         <div class="standards-bar">
                             <div class="standards-segment beginner"></div>
                             <div class="standards-segment novice"></div>
                             <div class="standards-segment intermediate"></div>
                             <div class="standards-segment advanced"></div>
                             <div class="standards-segment elite"></div>
-                            <div class="standards-marker" id="standards-marker"></div>
+                            <div class="standards-marker" id="progress-marker"></div>
                         </div>
                         <div class="standards-labels">
                             <span>Beg</span><span>Nov</span><span>Int</span><span>Adv</span><span>Elite</span>
                         </div>
-                        <div id="standards-info" style="margin-top: 10px; font-size: 12px; color: var(--text-muted);"></div>
+                        <div id="progress-level-info" style="margin-top: 10px; font-size: 12px; color: var(--text-muted);"></div>
                     </div>
-
-                    <button type="button" class="btn btn-primary" id="save-1rm-btn" style="margin-top: 14px; display: none;">Save Estimate</button>
-
-                    <div class="percentage-grid" id="percentage-grid"></div>
                 </div>
 
+                <!-- Calculate from Lift -->
                 <div class="calc-section">
-                    <h3 class="calc-title">Strength Standards (1RM)</h3>
-                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Working weight (70%) in parentheses</p>
-                    <div id="standards-table"></div>
+                    <h3 class="calc-title">Calculate from Lift</h3>
+                    <div class="form-row">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Weight (lbs)</label>
+                            <input type="number" inputmode="decimal" class="form-input" id="progress-calc-weight" placeholder="135" min="0" max="1500" step="0.5">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Reps</label>
+                            <input type="number" inputmode="numeric" class="form-input" id="progress-calc-reps" placeholder="8" min="1" max="100" step="1">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="progress-update-btn" style="margin-top: 12px; width: 100%;">Update 1RM & Working Weight</button>
+                </div>
+
+                <!-- Plan Progression -->
+                <div class="calc-section" id="progress-plan-section">
+                    <h3 class="calc-title">Plan Progression</h3>
+                    <div class="planner-config">
+                        <div class="planner-field">
+                            <span class="planner-label">Current</span>
+                            <input type="number" inputmode="decimal" class="planner-input" id="progress-plan-current" placeholder="135" min="0" max="1500" step="2.5">
+                        </div>
+                        <div class="planner-field">
+                            <span class="planner-label">Goal</span>
+                            <input type="number" inputmode="decimal" class="planner-input" id="progress-plan-goal" placeholder="185" min="0" max="1500" step="2.5">
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Frequency</label>
+                            <select class="form-input" id="progress-plan-frequency">
+                                <option value="1">1×/week</option>
+                                <option value="2" selected>2×/week</option>
+                                <option value="3">3×/week</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Increment</label>
+                            <input type="number" inputmode="decimal" class="form-input" id="progress-plan-increment" placeholder="5" min="0" max="50" step="2.5" value="5">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="progress-generate-plan-btn" style="margin-top: 12px; width: 100%;">Generate Plan</button>
+
+                    <!-- Active Plan Display -->
+                    <div id="progress-active-plan" style="display: none; margin-top: 16px; padding: 14px; background: var(--bg); border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong id="progress-plan-name">Plan Name</strong>
+                            <button type="button" class="btn-text" id="progress-cancel-plan" style="color: var(--text-muted); font-size: 11px;">×</button>
+                        </div>
+                        <div id="progress-plan-progress" style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;"></div>
+                        <div style="width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
+                            <div id="progress-plan-bar" style="height: 100%; background: var(--accent); transition: width 0.3s;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1411,17 +1428,7 @@
                 </svg>
                 Workout
             </button>
-            <button type="button" class="nav-item" data-tab="calc" aria-label="1RM Calculator tab">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <rect x="4" y="2" width="16" height="20" rx="2"></rect>
-                    <line x1="8" y1="6" x2="16" y2="6"></line>
-                    <line x1="8" y1="10" x2="16" y2="10"></line>
-                    <line x1="8" y1="14" x2="12" y2="14"></line>
-                    <line x1="8" y1="18" x2="12" y2="18"></line>
-                </svg>
-                1RM
-            </button>
-            <button type="button" class="nav-item" data-tab="progress" aria-label="Progress Planner tab">
+            <button type="button" class="nav-item" data-tab="calc" aria-label="Progress tab">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
                     <polyline points="17 6 23 6 23 12"></polyline>
@@ -1434,6 +1441,13 @@
                     <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
                 History
+            </button>
+            <button type="button" class="nav-item" data-tab="settings" aria-label="Settings tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+                </svg>
+                ⚙️
             </button>
         </nav>
 
