@@ -423,6 +423,41 @@
             letter-spacing: 0.5px;
         }
 
+        /* v4 - Exercise picker pills */
+        .exercise-pill {
+            padding: 6px 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .exercise-pill:hover, .exercise-pill:focus {
+            background: var(--surface-raised);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* v4 - Text button */
+        .btn-text {
+            background: none;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            padding: 4px 8px;
+            text-decoration: underline;
+        }
+
+        .btn-text:hover {
+            color: #ff6b5b;
+        }
+
         .add-btn {
             width: 100%;
             padding: 12px;
@@ -1386,14 +1421,75 @@
                     <label class="form-label">Template Name</label>
                     <input type="text" class="form-input" id="template-name" placeholder="e.g., Push Day, Leg Day..." required>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Exercises</label>
-                    <div id="template-exercises"></div>
-                    <button type="button" class="add-btn" id="add-exercise-btn">+ Add Exercise</button>
+
+                <!-- Exercise Picker Section -->
+                <div class="form-group" id="exercise-picker-section">
+                    <label class="form-label">Add Exercises</label>
+                    <input type="text" class="form-input" id="exercise-search" placeholder="🔍 Search exercises..." style="margin-bottom: 12px;">
+
+                    <div id="exercise-categories" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 8px;">
+                        <!-- Categories will be populated by JS -->
+                    </div>
+
+                    <button type="button" class="btn btn-secondary" id="create-custom-exercise-btn" style="margin-top: 8px; width: 100%;">+ Create Custom Exercise</button>
                 </div>
+
+                <!-- Added Exercises -->
+                <div class="form-group">
+                    <label class="form-label">Template Exercises</label>
+                    <div id="template-exercises"></div>
+                </div>
+
                 <input type="hidden" id="editing-template-id">
                 <button type="submit" class="btn btn-primary">Save Template</button>
                 <button type="button" class="btn btn-danger" id="delete-template-btn" style="margin-top: 8px; display: none;">Delete Template</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Exercise Modal -->
+    <div class="modal-overlay" id="custom-exercise-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Create Custom Exercise</h3>
+                <button type="button" class="close-btn" id="close-custom-exercise-modal" aria-label="Close modal">×</button>
+            </div>
+            <form id="custom-exercise-form" onsubmit="return false;" autocomplete="off">
+                <div class="form-group">
+                    <label class="form-label">Exercise Name</label>
+                    <input type="text" class="form-input" id="custom-exercise-name" placeholder="e.g., Hack Squat" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-input" id="custom-exercise-category">
+                        <option value="strength">Strength</option>
+                        <option value="cardio">Cardio</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Equipment</label>
+                    <select class="form-input" id="custom-exercise-equipment">
+                        <option value="barbell">Barbell</option>
+                        <option value="dumbbell">Dumbbell</option>
+                        <option value="kettlebell">Kettlebell</option>
+                        <option value="cable">Cable</option>
+                        <option value="machine">Machine</option>
+                        <option value="bodyweight">Bodyweight</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Muscle Group</label>
+                    <select class="form-input" id="custom-exercise-muscle">
+                        <option value="chest">Chest</option>
+                        <option value="back">Back</option>
+                        <option value="shoulders">Shoulders</option>
+                        <option value="arms">Arms</option>
+                        <option value="legs">Legs</option>
+                        <option value="core">Core</option>
+                        <option value="fullbody">Full Body</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Exercise</button>
             </form>
         </div>
     </div>
@@ -1752,103 +1848,376 @@
                 return;
             }
 
-            list.innerHTML = templates.map(t => `
-                <div class="card">
-                    <div class="card-title">${esc(t.name)}</div>
-                    <div class="card-subtitle">${t.exercises.map(e => `${e.name}: ${e.sets}×${e.reps} @ ${e.weight}`).join('<br>')}</div>
-                    <div style="display: flex; gap: 8px; margin-top: 12px;">
-                        <button type="button" class="btn btn-primary" style="flex: 1;" onclick="startWorkout('${t.id}')">Start</button>
-                        <button type="button" class="btn btn-secondary" style="width: 50px;" onclick="openTemplateModal('${t.id}')" aria-label="Edit template">✎</button>
-                    </div>
-                </div>
-            `).join('');
+            list.innerHTML = templates.map(t => {
+                // Format exercise summary
+                const exerciseSummary = t.exercises.map(e => {
+                    const exercise = getExercise(e.exerciseId);
+                    if (!exercise) return '';
+
+                    if (exercise.category === 'cardio') {
+                        return `${e.isWarmup ? '☀ ' : ''}${exercise.name}: ${e.targetTime || 10}min`;
+                    } else {
+                        const weight = e.targetWeight || '';
+                        return `${e.isWarmup ? '☀ ' : ''}${exercise.name}: ${e.targetSets || 3}×${e.targetReps || 8}${weight ? ' @ ' + weight : ''}`;
+                    }
+                }).filter(s => s).join('<br>');
+
+                return `
+                    <div class="card">
+                        <div class="card-title">${esc(t.name)}</div>
+                        <div class="card-subtitle">${exerciseSummary || 'No exercises'}</div>
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button type="button" class="btn btn-primary" style="flex: 1;" onclick="startWorkout('${t.id}')">Start</button>
+                            <button type="button" class="btn btn-secondary" style="width: 50px;" onclick="openTemplateModal(null, '${t.id}')" aria-label="Copy template" title="Copy">⎘</button>
+                            <button type="button" class="btn btn-secondary" style="width: 50px;" onclick="openTemplateModal('${t.id}')" aria-label="Edit template" title="Edit">✎</button>
+                        </div>
+                    </div>`;
+            }).join('');
         }
 
-        let exerciseCount = 0;
+        // ===================== TEMPLATE SYSTEM v4 =====================
+        let templateExercises = []; // Exercises added to current template
 
-        window.openTemplateModal = function(editId = null) {
+        // Render exercise categories in picker
+        function renderExercisePicker(searchTerm = '') {
+            const container = document.getElementById('exercise-categories');
+            const exercises = getObj(KEYS.exercises);
+            const term = searchTerm.toLowerCase();
+
+            // Group exercises
+            const favorites = Object.values(exercises).filter(e => e.isFavorite);
+            const byEquipment = {
+                barbell: [],
+                dumbbell: [],
+                kettlebell: [],
+                cable: [],
+                machine: [],
+                bodyweight: [],
+                cardio: []
+            };
+
+            Object.values(exercises).forEach(ex => {
+                if (term && !ex.name.toLowerCase().includes(term)) return;
+
+                if (ex.category === 'cardio') {
+                    byEquipment.cardio.push(ex);
+                } else {
+                    if (byEquipment[ex.equipment]) {
+                        byEquipment[ex.equipment].push(ex);
+                    }
+                }
+            });
+
+            let html = '';
+
+            // Favorites
+            if (favorites.length > 0 && !term) {
+                html += '<div style="margin-bottom: 8px;"><strong style="color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">★ Favorites</strong><div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">';
+                favorites.forEach(ex => {
+                    html += `<button type="button" class="exercise-pill" data-exercise-id="${ex.id}">${esc(ex.name)}</button>`;
+                });
+                html += '</div></div>';
+            }
+
+            // Strength categories
+            const strengthCategories = [
+                { key: 'barbell', label: 'Barbell' },
+                { key: 'dumbbell', label: 'Dumbbell' },
+                { key: 'kettlebell', label: 'Kettlebell' },
+                { key: 'cable', label: 'Cable/Machine' },
+                { key: 'bodyweight', label: 'Bodyweight' }
+            ];
+
+            strengthCategories.forEach(cat => {
+                const list = byEquipment[cat.key];
+                if (cat.key === 'cable') {
+                    // Combine cable and machine
+                    list.push(...byEquipment.machine);
+                }
+
+                if (list.length > 0) {
+                    html += `<div style="margin-bottom: 8px;"><strong style="color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">${cat.label}</strong><div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">`;
+                    list.forEach(ex => {
+                        html += `<button type="button" class="exercise-pill" data-exercise-id="${ex.id}">${esc(ex.name)}</button>`;
+                    });
+                    html += '</div></div>';
+                }
+            });
+
+            // Cardio
+            if (byEquipment.cardio.length > 0) {
+                html += '<div style="margin-bottom: 8px;"><strong style="color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Cardio</strong><div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">';
+                byEquipment.cardio.forEach(ex => {
+                    html += `<button type="button" class="exercise-pill" data-exercise-id="${ex.id}">${esc(ex.name)}</button>`;
+                });
+                html += '</div></div>';
+            }
+
+            container.innerHTML = html || '<p style="color: var(--text-muted); font-size: 12px;">No exercises found</p>';
+
+            // Add click handlers
+            container.querySelectorAll('.exercise-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const exerciseId = btn.dataset.exerciseId;
+                    addExerciseToTemplate(exerciseId);
+                });
+            });
+        }
+
+        // Add exercise to template
+        function addExerciseToTemplate(exerciseId) {
+            const exercise = getExercise(exerciseId);
+            if (!exercise) return;
+
+            const templateEx = {
+                exerciseId: exercise.id,
+                isWarmup: false,
+                targetSets: 3,
+                targetReps: 8,
+                targetWeight: exercise.workingWeight || null,
+                targetTime: null,
+                targetResistance: null,
+                targetSpeed: null,
+                targetIncline: null,
+                targetDistance: null
+            };
+
+            // Set cardio defaults
+            if (exercise.category === 'cardio') {
+                templateEx.targetTime = 10;
+                templateEx.targetResistance = 8;
+            }
+
+            templateExercises.push(templateEx);
+            renderTemplateExercises();
+        }
+
+        // Render added exercises in template
+        function renderTemplateExercises() {
             const container = document.getElementById('template-exercises');
-            container.innerHTML = '';
-            exerciseCount = 0;
 
-            if (editId) {
-                const t = get(KEYS.templates).find(x => x.id === editId);
+            if (templateExercises.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 12px; padding: 12px;">No exercises added yet. Select from above.</p>';
+                return;
+            }
+
+            container.innerHTML = templateExercises.map((ex, idx) => {
+                const exercise = getExercise(ex.exerciseId);
+                if (!exercise) return '';
+
+                const isCardio = exercise.category === 'cardio';
+                const warmupChecked = ex.isWarmup ? 'checked' : '';
+
+                let fields = '';
+                if (isCardio) {
+                    fields = `
+                        <div class="exercise-field-row">
+                            <div class="exercise-field-group">
+                                <span class="exercise-field-label">Time (min)</span>
+                                <input type="number" inputmode="numeric" class="exercise-field" data-idx="${idx}" data-field="targetTime" value="${ex.targetTime || 10}" min="1" max="120" step="1">
+                            </div>
+                            <div class="exercise-field-group">
+                                <span class="exercise-field-label">Resistance</span>
+                                <input type="number" inputmode="numeric" class="exercise-field" data-idx="${idx}" data-field="targetResistance" value="${ex.targetResistance || 8}" min="1" max="20" step="1">
+                            </div>
+                        </div>`;
+                } else {
+                    const workingWeight = exercise.workingWeight || '';
+                    fields = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-size: 11px; color: var(--text-muted);">Working: ${workingWeight ? workingWeight + ' lbs' : 'Not set'}</span>
+                            <button type="button" class="btn-text" data-idx="${idx}" data-action="autofill" style="font-size: 11px; padding: 4px 8px;">Auto-fill</button>
+                        </div>
+                        <div class="exercise-field-row">
+                            <div class="exercise-field-group">
+                                <span class="exercise-field-label">Sets</span>
+                                <input type="number" inputmode="numeric" class="exercise-field" data-idx="${idx}" data-field="targetSets" value="${ex.targetSets || 3}" min="1" max="20" step="1">
+                            </div>
+                            <div class="exercise-field-group">
+                                <span class="exercise-field-label">Reps</span>
+                                <input type="number" inputmode="numeric" class="exercise-field" data-idx="${idx}" data-field="targetReps" value="${ex.targetReps || 8}" min="1" max="100" step="1">
+                            </div>
+                        </div>
+                        <div class="exercise-field-group">
+                            <span class="exercise-field-label">Weight (lbs)</span>
+                            <input type="number" inputmode="decimal" class="exercise-field" data-idx="${idx}" data-field="targetWeight" placeholder="${workingWeight || '135'}" value="${ex.targetWeight || ''}" autocomplete="off">
+                        </div>`;
+                }
+
+                return `
+                    <div class="exercise-entry">
+                        <div class="exercise-entry-header">
+                            <div>
+                                <span class="exercise-num">${ex.isWarmup ? '☀ ' : ''}${esc(exercise.name)}</span>
+                                <label style="display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; cursor: pointer;">
+                                    <input type="checkbox" data-idx="${idx}" data-field="isWarmup" ${warmupChecked} style="margin-right: 4px;">
+                                    Warmup
+                                </label>
+                            </div>
+                            <button type="button" class="remove-btn" data-idx="${idx}" data-action="remove">×</button>
+                        </div>
+                        <div class="exercise-fields">
+                            ${fields}
+                        </div>
+                    </div>`;
+            }).join('');
+
+            // Add event listeners
+            container.querySelectorAll('input[data-idx]').forEach(input => {
+                input.addEventListener('change', e => {
+                    const idx = parseInt(e.target.dataset.idx);
+                    const field = e.target.dataset.field;
+                    if (field === 'isWarmup') {
+                        templateExercises[idx][field] = e.target.checked;
+                    } else {
+                        templateExercises[idx][field] = e.target.type === 'number' ? (parseFloat(e.target.value) || null) : e.target.value;
+                    }
+                    renderTemplateExercises(); // Re-render to update warmup icon
+                });
+            });
+
+            container.querySelectorAll('button[data-action="remove"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.idx);
+                    templateExercises.splice(idx, 1);
+                    renderTemplateExercises();
+                });
+            });
+
+            container.querySelectorAll('button[data-action="autofill"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.idx);
+                    const ex = templateExercises[idx];
+                    const exercise = getExercise(ex.exerciseId);
+                    if (exercise && exercise.workingWeight) {
+                        ex.targetWeight = exercise.workingWeight;
+                        renderTemplateExercises();
+                        showToast('Auto-filled from working weight');
+                    } else {
+                        showToast('No working weight set for this exercise');
+                    }
+                });
+            });
+        }
+
+        // Open template modal
+        window.openTemplateModal = function(editId = null, copyId = null) {
+            templateExercises = [];
+
+            if (editId || copyId) {
+                const t = get(KEYS.templates).find(x => x.id === (editId || copyId));
                 if (t) {
-                    document.getElementById('template-modal-title').textContent = 'Edit Template';
-                    document.getElementById('template-name').value = t.name;
-                    document.getElementById('editing-template-id').value = editId;
-                    document.getElementById('delete-template-btn').style.display = 'block';
-                    t.exercises.forEach(e => addExerciseEntry(e));
+                    if (editId) {
+                        document.getElementById('template-modal-title').textContent = 'Edit Template';
+                        document.getElementById('template-name').value = t.name;
+                        document.getElementById('editing-template-id').value = editId;
+                        document.getElementById('delete-template-btn').style.display = 'block';
+                    } else {
+                        document.getElementById('template-modal-title').textContent = 'Copy Template';
+                        document.getElementById('template-name').value = t.name + ' (Copy)';
+                        document.getElementById('editing-template-id').value = '';
+                        document.getElementById('delete-template-btn').style.display = 'none';
+                    }
+                    templateExercises = [...t.exercises];
                 }
             } else {
                 document.getElementById('template-modal-title').textContent = 'New Template';
                 document.getElementById('template-name').value = '';
                 document.getElementById('editing-template-id').value = '';
                 document.getElementById('delete-template-btn').style.display = 'none';
-                addExerciseEntry();
             }
 
+            renderExercisePicker();
+            renderTemplateExercises();
             document.getElementById('template-modal').classList.add('active');
         }
 
-        function addExerciseEntry(data = {}) {
-            exerciseCount++;
-            const container = document.getElementById('template-exercises');
-            const div = document.createElement('div');
-            div.className = 'exercise-entry';
-            div.innerHTML = `
-                <div class="exercise-entry-header">
-                    <span class="exercise-num">EXERCISE ${exerciseCount}</span>
-                    <button type="button" class="remove-btn" onclick="this.closest('.exercise-entry').remove()">×</button>
-                </div>
-                <div class="exercise-fields">
-                    <input type="text" class="exercise-field" placeholder="Exercise name" value="${esc(data.name || '')}" autocomplete="off" autocapitalize="words">
-                    <div class="exercise-field-row">
-                        <div class="exercise-field-group">
-                            <span class="exercise-field-label">Sets</span>
-                            <input type="number" inputmode="numeric" class="exercise-field" placeholder="3" value="${data.sets || '3'}" min="1" max="20" step="1">
-                        </div>
-                        <div class="exercise-field-group">
-                            <span class="exercise-field-label">Reps</span>
-                            <input type="number" inputmode="numeric" class="exercise-field" placeholder="8" value="${data.reps || '8'}" min="1" max="100" step="1">
-                        </div>
-                    </div>
-                    <div class="exercise-field-group">
-                        <span class="exercise-field-label">Weight</span>
-                        <input type="text" inputmode="decimal" class="exercise-field" placeholder="135 lbs" value="${esc(data.weight || '')}" autocomplete="off">
-                    </div>
-                </div>`;
-            container.appendChild(div);
-        }
+        // Search exercises
+        document.getElementById('exercise-search').addEventListener('input', e => {
+            renderExercisePicker(e.target.value);
+        });
 
-        document.getElementById('add-exercise-btn').addEventListener('click', () => addExerciseEntry());
-        document.getElementById('close-template-modal').addEventListener('click', () => document.getElementById('template-modal').classList.remove('active'));
+        // Custom exercise creation
+        document.getElementById('create-custom-exercise-btn').addEventListener('click', () => {
+            document.getElementById('custom-exercise-modal').classList.add('active');
+        });
+
+        document.getElementById('close-custom-exercise-modal').addEventListener('click', () => {
+            document.getElementById('custom-exercise-modal').classList.remove('active');
+        });
+
+        document.getElementById('custom-exercise-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const name = document.getElementById('custom-exercise-name').value.trim();
+            const category = document.getElementById('custom-exercise-category').value;
+            const equipment = document.getElementById('custom-exercise-equipment').value;
+            const muscleGroup = document.getElementById('custom-exercise-muscle').value;
+
+            if (!name) return;
+
+            const exercises = getObj(KEYS.exercises);
+            const id = 'custom-' + genId();
+
+            exercises[id] = {
+                id,
+                name,
+                category,
+                equipment,
+                muscleGroup,
+                hasStandards: false,
+                trackingType: category === 'cardio' ? 'cardio' : 'weight-reps',
+                weightIncrement: 5,
+                cardioFields: category === 'cardio' ? ['time', 'resistance'] : undefined,
+                isCustom: true,
+                isFavorite: false,
+                workingWeight: null,
+                estimated1RM: null,
+                pr: {},
+                lastPerformed: null,
+                trend: 'stable'
+            };
+
+            set(KEYS.exercises, exercises);
+            document.getElementById('custom-exercise-modal').classList.remove('active');
+            document.getElementById('custom-exercise-form').reset();
+            renderExercisePicker();
+            showToast('Custom exercise created!', 'success');
+        });
+
+        // Modal close buttons
+        document.getElementById('close-template-modal').addEventListener('click', () => {
+            document.getElementById('template-modal').classList.remove('active');
+        });
+
         document.getElementById('fab-btn').addEventListener('click', () => openTemplateModal());
 
+        // Save template
         document.getElementById('template-form').addEventListener('submit', e => {
             e.preventDefault();
             const name = document.getElementById('template-name').value.trim();
             if (!name) return;
 
-            const exercises = [];
-            document.querySelectorAll('.exercise-entry').forEach(entry => {
-                const fields = entry.querySelectorAll('.exercise-field');
-                const exName = fields[0].value.trim();
-                if (exName) {
-                    exercises.push({ name: exName, sets: fields[1].value || '3', reps: fields[2].value || '8', weight: fields[3].value.trim() || '' });
-                }
-            });
-
-            if (exercises.length === 0) { showToast('Add at least one exercise'); return; }
+            if (templateExercises.length === 0) {
+                showToast('Add at least one exercise');
+                return;
+            }
 
             const templates = get(KEYS.templates);
             const editId = document.getElementById('editing-template-id').value;
 
             if (editId) {
                 const idx = templates.findIndex(t => t.id === editId);
-                if (idx !== -1) templates[idx] = { ...templates[idx], name, exercises };
+                if (idx !== -1) {
+                    templates[idx] = { ...templates[idx], name, exercises: templateExercises };
+                }
             } else {
-                templates.push({ id: genId(), name, exercises });
+                templates.push({
+                    id: genId(),
+                    name,
+                    exercises: templateExercises,
+                    createdAt: new Date().toISOString(),
+                    lastPerformed: null
+                });
             }
 
             set(KEYS.templates, templates);
@@ -1857,6 +2226,7 @@
             showToast(editId ? 'Template updated!' : 'Template created!', 'success');
         });
 
+        // Delete template
         document.getElementById('delete-template-btn').addEventListener('click', () => {
             const editId = document.getElementById('editing-template-id').value;
             if (editId) {
