@@ -232,11 +232,16 @@ export function renderStandardsTable(exercise) {
     const standards = STANDARDS[sex][exercise.id];
     const current1RM = exercise.estimated1RM || 0;
 
-    let html = '<div class="standards-table">';
+    // Header with bodyweight info
+    let html = `<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">
+        Based on ${bodyWeight} lbs bodyweight (${sex})
+    </div>`;
+
+    html += '<div class="standards-table">';
     html += '<div class="standards-row header">';
     html += '<div class="standards-cell name">Level</div>';
     html += '<div class="standards-cell">1RM</div>';
-    html += '<div class="standards-cell">Working (70%)</div>';
+    html += '<div class="standards-cell">Working</div>';
     html += '</div>';
 
     LEVELS.forEach((level, i) => {
@@ -244,10 +249,10 @@ export function renderStandardsTable(exercise) {
         const working = Math.round(rm * 0.7);
         const isCurrent = current1RM >= rm && (i === LEVELS.length - 1 || current1RM < Math.round(standards[i + 1] * bodyWeight));
 
-        html += `<div class="standards-row">`;
-        html += `<div class="standards-cell name ${isCurrent ? 'current' : ''}">${level}</div>`;
-        html += `<div class="standards-cell ${isCurrent ? 'current' : ''}">${rm}</div>`;
-        html += `<div class="standards-cell ${isCurrent ? 'current' : ''}">${working}</div>`;
+        html += `<div class="standards-row ${isCurrent ? 'current' : ''}">`;
+        html += `<div class="standards-cell name">${isCurrent ? '→ ' : ''}${level}</div>`;
+        html += `<div class="standards-cell"><strong>${rm}</strong> lbs</div>`;
+        html += `<div class="standards-cell">${working} lbs</div>`;
         html += `</div>`;
     });
 
